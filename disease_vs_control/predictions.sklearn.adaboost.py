@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV
 
 
-n_cpu = 2
+n_cpu = 1
 
 dataset = h.File("data/numpy_dataset.h5", "r")
 idx_by_patient_id = {id: i for i, id in enumerate(dataset["example_ids"])}
