@@ -2,3 +2,9 @@ ds.overview: dataset_overview.py
 	python $<
 ds.convert.to.ram: convert_matrix_to_hdf5.py
 	python $<
+ds.split: split_dataset.py
+	python $<
+predictions.sklearn.random.forests: predictions.sklearn.random.forests.py
+	python $<
+predictions.sklearn.adaboost: predictions.sklearn.adaboost.py
+	python $<
