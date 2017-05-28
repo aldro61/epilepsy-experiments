@@ -8,3 +8,7 @@ predictions.sklearn.random.forests: predictions.sklearn.random.forests.py
 	python $<
 predictions.sklearn.adaboost: predictions.sklearn.adaboost.py
 	python $<
+predictions.sklearn.logistic.l1: predictions.sklearn.logistic.l1.py
+	python $<
+predictions.sklearn.logistic.l2: predictions.sklearn.logistic.l2.py
+	python $<

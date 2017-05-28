@@ -23,7 +23,7 @@ if not os.path.exists(os.path.join("predictions", "adaboost")):
 for split in os.listdir("splits"):
     print "...{0!s}".format(split)
 
-    if os.path.exists(os.path.join("predictions", "adaboost", split, "predictions.tsv")):
+    if os.path.exists(os.path.join("predictions", "adaboost", split, "parameters.pkl")):
         continue
 
     train_idx = [idx_by_patient_id[l.strip()] for l in open(os.path.join("splits", split, "train_ids.tsv"), "r")]
@@ -38,7 +38,7 @@ for split in os.listdir("splits"):
     y_test = y[test_idx]
     del X, y
 
-    params = dict(n_estimators=[100])
+    params = dict(n_estimators=[1, 3, 5, 7, 10, 100, 200, 500, 1000])
 
     estimator = GridSearchCV(estimator=AdaBoostClassifier(), param_grid=params, n_jobs=n_cpu, cv=10)
     estimator.fit(X_train, y_train)
@@ -53,6 +53,7 @@ for split in os.listdir("splits"):
     open(os.path.join("predictions", "adaboost", split, "train_predictions_proba.tsv"), "w").write("\n".join(train_predictions_proba.astype(np.str)))
     open(os.path.join("predictions", "adaboost", split, "test_predictions_proba.tsv"), "w").write("\n".join(test_predictions_proba.astype(np.str)))
     c.dump(estimator.best_params_, open(os.path.join("predictions", "adaboost", split, "parameters.pkl"), "w"))
+    c.dump(estimator.best_estimator_, open(os.path.join("predictions", "adaboost", split, "model.pkl"), "w"))
 
     print "......accuracy:", accuracy_score(y_true=y_test, y_pred=test_predictions)
     print "......auc:", roc_auc_score(y_true=y_test, y_score=test_predictions_proba)

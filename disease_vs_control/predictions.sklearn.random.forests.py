@@ -23,7 +23,7 @@ if not os.path.exists(os.path.join("predictions", "random_forest")):
 for split in os.listdir("splits"):
     print "...{0!s}".format(split)
 
-    if os.path.exists(os.path.join("predictions", "random_forest", split, "predictions.tsv")):
+    if os.path.exists(os.path.join("predictions", "random_forest", split, "parameters.pkl")):
         continue
 
     train_idx = [idx_by_patient_id[l.strip()] for l in open(os.path.join("splits", split, "train_ids.tsv"), "r")]
@@ -53,6 +53,7 @@ for split in os.listdir("splits"):
     open(os.path.join("predictions", "random_forest", split, "train_predictions_proba.tsv"), "w").write("\n".join(train_predictions_proba.astype(np.str)))
     open(os.path.join("predictions", "random_forest", split, "test_predictions_proba.tsv"), "w").write("\n".join(test_predictions_proba.astype(np.str)))
     c.dump(estimator.best_params_, open(os.path.join("predictions", "random_forest", split, "parameters.pkl"), "w"))
+    c.dump(estimator.best_estimator_, open(os.path.join("predictions", "random_forest", split, "model.pkl"), "w"))
 
     print "......accuracy:", accuracy_score(y_true=y_test, y_pred=test_predictions)
     print "......auc:", roc_auc_score(y_true=y_test, y_score=test_predictions_proba)
