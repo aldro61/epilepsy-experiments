@@ -14,3 +14,5 @@ predictions.sklearn.logistic.l2: predictions.sklearn.logistic.l2.py
 	python $<
 predictions.kover: predictions.kover.py
 	python $<
+predictions.constant: predictions.constant.py
+	python $<
