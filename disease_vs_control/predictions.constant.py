@@ -51,17 +51,11 @@ for split in os.listdir("splits"):
     estimator = ConstantModel()
     estimator.fit(X_train, y_train)
     train_predictions = estimator.predict(X_train)
-    train_predictions_proba = train_predictions
     test_predictions = estimator.predict(X_test)
-    test_predictions_proba = test_predictions
 
     os.mkdir(os.path.join("predictions", "constant", split))
     open(os.path.join("predictions", "constant", split, "train_predictions_binary.tsv"), "w").write("\n".join(train_predictions.astype(np.str)))
     open(os.path.join("predictions", "constant", split, "test_predictions_binary.tsv"), "w").write("\n".join(test_predictions.astype(np.str)))
-    open(os.path.join("predictions", "constant", split, "train_predictions_proba.tsv"), "w").write("\n".join(train_predictions_proba.astype(np.str)))
-    open(os.path.join("predictions", "constant", split, "test_predictions_proba.tsv"), "w").write("\n".join(test_predictions_proba.astype(np.str)))
-    c.dump(estimator.best_params_, open(os.path.join("predictions", "constant", split, "parameters.pkl"), "w"))
-    c.dump(estimator.best_estimator_, open(os.path.join("predictions", "constant", split, "model.pkl"), "w"))
+    c.dump(estimator, open(os.path.join("predictions", "constant", split, "model.pkl"), "w"))
 
     print "......accuracy:", accuracy_score(y_true=y_test, y_pred=test_predictions)
-    print "......auc:", roc_auc_score(y_true=y_test, y_score=test_predictions_proba)
