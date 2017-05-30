@@ -29,6 +29,17 @@ for split in os.listdir("splits"):
     if split not in [s.name for s in dataset.splits]:
         train_ids = [l.strip() for l in open(os.path.join("splits", split, "train_ids.tsv"), "r")]
         test_ids = [l.strip() for l in open(os.path.join("splits", split, "test_ids.tsv"), "r")]
-        print train_ids
+
+        os.system(
+"""
+kover dataset split \
+    --dataset {0!s} \
+    --id {1!s} \
+    --train-ids {2!s} \
+    --test-ids {3!s} \
+    --folds 10 \
+    --random-seed 42 \
+    -v
+""".format(kover_dataset_path, split, " ".join(train_ids), " ".join(test_ids)))
 
 # Run the experiments
