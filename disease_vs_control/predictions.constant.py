@@ -18,7 +18,7 @@ class ConstantModel(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         if len(np.unique(y)) > 2:
             raise Exception("I only handle binary classification!")
-        self.predicted_value = Counter(y).most_common(1)
+        self.predicted_value = Counter(y).most_common(1)[0][0]
 
     def predict(self, X):
         return np.array([self.predicted_value] * X.shape[0])
