@@ -6,10 +6,13 @@ import os
 
 from kover.dataset import KoverDataset
 
+
+n_cpu = 4
 phenotype_name = "Epilepsy case vs control"
 genomic_data_path = "/exec5/GROUP/pacoss/COMMUN/claudia/machine_learning/data/ibd_clusters.kmers.matrix"
 phenotype_data_path = "/exec5/GROUP/pacoss/COMMUN/claudia/machine_learning/data/ibd_clusters.pheno.txt"
 kover_dataset_path = "/exec5/GROUP/pacoss/COMMUN/adrouin/epilepsie/data/disease_vs_control/dataset.kover"
+
 
 # Create the Kover dataset if needed
 if not os.path.exists(kover_dataset_path):
@@ -43,3 +46,18 @@ kover dataset split \
 """.format(kover_dataset_path, split, " ".join(train_ids), " ".join(test_ids)))
 
 # Run the experiments
+for split in os.listdir("splits"):
+    output_dir = os.path.join("predictions", "kover.scm", split)
+    os.system(
+"""
+kover learn \
+    --dataset {0!s} \
+    --split {1!s} \
+    --model-type conjunction disjunction \
+    --hp-choice cv \
+    --random-seed 42 \
+    --n-cpu {2:d} \
+    --output-dir {3!s} \
+    -v
+""".format(kover_dataset_path, split, n_cpu, output_dir))
+    
