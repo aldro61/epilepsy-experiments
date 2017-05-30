@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV
 
 
-n_cpu = 1
+n_cpu = 12
 
 dataset = h.File("data/numpy_dataset.h5", "r")
 idx_by_patient_id = {id: i for i, id in enumerate(dataset["example_ids"])}
@@ -38,7 +38,7 @@ for split in os.listdir("splits"):
     y_test = y[test_idx]
     del X, y
 
-    params = dict(n_estimators=[100], class_weight=["balanced"])
+    params = dict(n_estimators=[1, 3, 5, 7, 10, 30, 70, 100, 200, 350, 500, 1000], class_weight=["balanced"])
 
     estimator = GridSearchCV(estimator=RandomForestClassifier(), param_grid=params, n_jobs=n_cpu, cv=10)
     estimator.fit(X_train, y_train)
