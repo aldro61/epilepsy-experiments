@@ -16,3 +16,5 @@ predictions.kover: predictions.kover.py
 	python $<
 predictions.constant: predictions.constant.py
 	python $<
+predictions.sklearn.svm.linear: predictions.sklearn.svm.linear.py
+	python $<
