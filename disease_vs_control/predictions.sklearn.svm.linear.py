@@ -1,5 +1,4 @@
-"""
-Linear SVM predictions for each train/test split
+""" Linear SVM predictions for each train/test split
 
 """
 import cPickle as c
@@ -12,7 +11,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 from sklearn.model_selection import GridSearchCV
 
 
-n_cpu = 1
+n_cpu = 8
 
 dataset = h.File("data/numpy_dataset.h5", "r")
 idx_by_patient_id = {id: i for i, id in enumerate(dataset["example_ids"])}
@@ -40,7 +39,7 @@ for split in os.listdir("splits"):
 
     params = dict(kernel=["linear"],
                   C=np.logspace(-4, 4, 10),
-                  class_weight=["balanced", None],
+                  class_weight=["balanced"],
                   probability=[True])
 
     estimator = GridSearchCV(estimator=SVC(), param_grid=params, n_jobs=n_cpu, cv=10)
