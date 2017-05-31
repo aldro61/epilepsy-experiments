@@ -18,3 +18,5 @@ predictions.constant: predictions.constant.py
 	python $<
 predictions.sklearn.svm.linear: predictions.sklearn.svm.linear.py
 	python $<
+predictions.sklearn.svm.polynomial: predictions.sklearn.svm.polynomial.py
+	python $<
