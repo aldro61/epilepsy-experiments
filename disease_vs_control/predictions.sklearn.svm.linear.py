@@ -8,12 +8,15 @@ import os
 
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, roc_auc_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, ParameterGrid
 
 
-n_cpu = 8
+n_folds = 10
+random_state = np.random.RandomState(42)
 
 dataset = h.File("data/numpy_dataset.h5", "r")
+kernel_matrix = h.File("data/linear.kernel.h5", "r")["kernel_matrix"][...]
+y = dataset["labels"][...]
 idx_by_patient_id = {id: i for i, id in enumerate(dataset["example_ids"])}
 
 if not os.path.exists(os.path.join("predictions", "linear_svm")):
@@ -25,37 +28,56 @@ for split in os.listdir("splits"):
     if os.path.exists(os.path.join("predictions", "linear_svm", split, "parameters.pkl")):
         continue
 
-    train_idx = [idx_by_patient_id[l.strip()] for l in open(os.path.join("splits", split, "train_ids.tsv"), "r")]
-    test_idx = [idx_by_patient_id[l.strip()] for l in open(os.path.join("splits", split, "test_ids.tsv"), "r")]
+    train_idx = np.array([idx_by_patient_id[l.strip()] for l in open(os.path.join("splits", split, "train_ids.tsv"), "r")])
+    test_idx = np.array([idx_by_patient_id[l.strip()] for l in open(os.path.join("splits", split, "test_ids.tsv"), "r")])
 
-    X = dataset["features"][...]
-    y = dataset["labels"][...]
+    params = ParameterGrid(dict(C=np.logspace(-5, 3, 10)))
 
-    X_train = X[train_idx]
-    X_test = X[test_idx]
+    # Select the best HP by cross-validation
+    hp_results = []
+    for hps in params:
+        folds = np.arange(len(train_idx)) % n_folds
+        random_state.shuffle(folds)
+
+        fold_scores = []
+        for fold in np.unique(folds):
+            fold_train_idx = train_idx[folds != fold]
+            fold_test_idx = train_idx[folds == fold]
+
+            fold_K_train = kernel_matrix[fold_train_idx][:, fold_train_idx]
+            fold_y_train = y[fold_train_idx]
+            fold_K_test = kernel_matrix[fold_test_idx][:, fold_train_idx]
+            fold_y_test = y[fold_test_idx]
+
+            estimator = SVC(kernel="precomputed", C=hps["C"], probability=True, class_weight="balanced")
+            estimator.fit(fold_K_train, fold_y_train)
+            fold_scores.append(estimator.score(fold_K_test, fold_y_test))
+        print hps, fold_scores[-1]
+        hp_results.append(np.mean(fold_scores))  # Cross-validation score (average accuracy)
+
+    # Refit on entire training set and predict on testing set using the best hyperparameters
+    best_hps = params[np.argmax(hp_results)]
+
+    K_train = kernel_matrix[train_idx][:, train_idx]
     y_train = y[train_idx]
+    K_test = kernel_matrix[test_idx][:, train_idx]
     y_test = y[test_idx]
-    del X, y
 
-    params = dict(kernel=["linear"],
-                  C=np.logspace(-4, 4, 10),
-                  class_weight=["balanced"],
-                  probability=[True])
-
-    estimator = GridSearchCV(estimator=SVC(), param_grid=params, n_jobs=n_cpu, cv=10)
-    estimator.fit(X_train, y_train)
-    train_predictions = estimator.predict(X_train)
-    train_predictions_proba = estimator.predict_proba(X_train)[:, 1]
-    test_predictions = estimator.predict(X_test)
-    test_predictions_proba = estimator.predict_proba(X_test)[:, 1]
+    estimator = SVC(C=best_hps["C"], kernel="precomputed", probability=True, class_weight="balanced")
+    estimator.fit(K_train, y_train)
+    train_predictions = estimator.predict(K_train)
+    train_predictions_proba = estimator.predict_proba(K_train)[:, 1]
+    test_predictions = estimator.predict(K_test)
+    test_predictions_proba = estimator.predict_proba(K_test)[:, 1]
 
     os.mkdir(os.path.join("predictions", "linear_svm", split))
     open(os.path.join("predictions", "linear_svm", split, "train_predictions_binary.tsv"), "w").write("\n".join(train_predictions.astype(np.str)))
     open(os.path.join("predictions", "linear_svm", split, "test_predictions_binary.tsv"), "w").write("\n".join(test_predictions.astype(np.str)))
     open(os.path.join("predictions", "linear_svm", split, "train_predictions_proba.tsv"), "w").write("\n".join(train_predictions_proba.astype(np.str)))
     open(os.path.join("predictions", "linear_svm", split, "test_predictions_proba.tsv"), "w").write("\n".join(test_predictions_proba.astype(np.str)))
-    c.dump(estimator.best_params_, open(os.path.join("predictions", "linear_svm", split, "parameters.pkl"), "w"))
-    c.dump(estimator.best_estimator_, open(os.path.join("predictions", "linear_svm", split, "model.pkl"), "w"))
+    c.dump(best_hps, open(os.path.join("predictions", "linear_svm", split, "parameters.pkl"), "w"))
+    c.dump(estimator, open(os.path.join("predictions", "linear_svm", split, "model.pkl"), "w"))
+    c.dump(zip(params, hp_results), open(os.path.join("predictions", "linear_svm", split, "cv_results.pkl"), "w"))
 
     print "......accuracy:", accuracy_score(y_true=y_test, y_pred=test_predictions)
     print "......auc:", roc_auc_score(y_true=y_test, y_score=test_predictions_proba)
