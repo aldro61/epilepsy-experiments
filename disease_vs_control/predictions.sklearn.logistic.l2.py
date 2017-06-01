@@ -37,7 +37,8 @@ for split in os.listdir("splits"):
     y_test = y[test_idx]
     del X, y
 
-    estimator = LogisticRegressionCV(Cs=10, cv=10, penalty="l2", n_jobs=n_cpu)
+    estimator = LogisticRegressionCV(Cs=10, cv=10, penalty="l2", n_jobs=n_cpu,
+                                     scoring="roc_auc")
     estimator.fit(X_train, y_train)
     train_predictions = estimator.predict(X_train)
     train_predictions_proba = estimator.predict_proba(X_train)[:, 1]

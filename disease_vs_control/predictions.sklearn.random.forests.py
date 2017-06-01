@@ -40,7 +40,8 @@ for split in os.listdir("splits"):
 
     params = dict(n_estimators=[1, 3, 5, 7, 10, 30, 70, 100, 200, 350, 500, 1000], class_weight=["balanced"])
 
-    estimator = GridSearchCV(estimator=RandomForestClassifier(), param_grid=params, n_jobs=n_cpu, cv=10)
+    estimator = GridSearchCV(estimator=RandomForestClassifier(), param_grid=params, n_jobs=n_cpu, cv=10,
+                             scoring="roc_auc")
     estimator.fit(X_train, y_train)
     train_predictions = estimator.predict(X_train)
     train_predictions_proba = estimator.predict_proba(X_train)[:, 1]
