@@ -1,0 +1,9 @@
+(dp1
+S'n_estimators'
+p2
+I70
+sS'class_weight'
+p3
+S'balanced'
+p4
+s.
